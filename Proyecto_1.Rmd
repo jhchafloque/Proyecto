@@ -1,0 +1,628 @@
+---
+title: "Proyecto_1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+````````````````````````````````````````````````````````````````````````
+Librerías
+```{r}
+
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(corrplot)
+library(readxl)
+library(gplots)
+library(ParamHelpers)
+library(mlr)
+library(VIM)
+library(statsr)
+library(modeest)
+
+set.seed(567)
+```
+
+Importamos los datos.
+```{r}
+
+getwd() # Verificamos dónde nos encontramos trabajando
+
+setwd("C:/Users/Data/") #Colocamos la direccion que nos interesa
+
+siniestro <- read_excel("C:/Users/Data/Data.xlsx")
+str(siniestro)
+
+dim(siniestro)
+
+head(siniestro)
+View(siniestro)
+
+```{r}
+
+attach(siniestro) #Agregamos la tabla de datos
+
+Utilizamos Estadistica Descriptiva
+```{r}
+##            MEDIDAS DE TENDENCIA CENTRAL
+################################################
+# Media
+x = Saldo_Pendiente 
+x_df = data.frame(x)
+Media = mean(x_df$x)
+Media
+
+# Mediana
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Mediana = median(x_df$x)
+Mediana
+
+# Moda
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Moda = mlv(x_df$x, method = "mfv")[1]
+Moda
+
+# Centro de Amplitud
+x = Saldo_Pendiente
+x_df = data.frame(x)
+C_a = (min(x_df$x) + max(x_df$x))/2
+C_a
+
+# Media Geometrica
+# Creamos la funci?n
+f_media_geometrica<-function(x) 
+  exp(sum(log(x))/length(x))
+
+x = Saldo_Pendiente 
+x_df = data.frame(x)
+Med_Geometrica = f_media_geometrica(x_df$x)
+round(Med_Geometrica, 2)
+
+# Media Armonica
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Media_Armonica = 1/mean(1/x_df$x)
+round(Media_Armonica, 2)
+
+# Media Recortada: al 20%, cada lado 10%
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Media_Recortada = mean(x_df$x,trim=10/100) # recortando un 20%
+round(Media_Recortada, 2)
+
+# Trimedia
+x = Saldo_Pendiente 
+x_df = data.frame(x)
+
+# Obtenemos los cuartiles
+Q1 = quantile(x_df$x,.25)
+Q2 = quantile(x_df$x,.50)
+Q3 = quantile(x_df$x,.75)
+
+Trimedia = (Q1 + 2*Q2 + Q3)/4
+round(Trimedia, 2)
+
+##            MEDIDAS DE DISPERSION
+################################################
+```{r}
+# Rango
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Rango =max(x_df$x) - min(x_df$x)
+Rango
+```
+
+```{r}
+# Cuartiles
+x = Saldo_Pendiente 
+x_df = data.frame(x)
+
+# Obtenemos los cuartiles
+Q1 = quantile(x_df$x,.25)
+Q2 = quantile(x_df$x,.50)
+Q3 = quantile(x_df$x,.75)
+
+print(min(x_df$x))
+print(c("Cuartil Q1: ",Q1),quote = F)
+print(c("Cuartil Q2: ",Q2),quote = F)
+print(c("Cuartil Q3: ",Q3),quote = F)
+print(max(x_df$x))
+```
+
+```{r}
+# Rango intercuartil
+x = Saldo_Pendiente 
+x_df = data.frame(x)
+
+# Obtenemos los cuartiles
+Q1 = quantile(x_df$x,.25)
+Q3 = quantile(x_df$x,.75)
+
+Rango_Intercuartil = Q3 - Q1
+
+print("El Rango Intercuartil es: ")
+print(Rango_Intercuartil, quote = F)
+```
+
+```{r}
+# Varianza
+x = Saldo_Pendiente
+x_df = data.frame(x)
+varianza = var(x_df$x)   #1ra opcion
+varianza = sd(x_df$x)^2  #2da opcion
+varianza
+```
+
+```{r}
+# Desviacion estandar
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Desv_Estandar = sd(x_df$x)
+Desv_Estandar
+```
+
+```{r}
+# Coeficiente de variaci?n
+x = Saldo_Pendiente
+x_df = data.frame(x)
+Media = mean(x_df$x)
+Desv_Estandar = sd(x_df$x)
+Coef_Variacion = Desv_Estandar/ Media * 100
+round(Coef_Variacion, 2)
+```
+
+```{r}
+# Cuantiles
+x = Saldo_Pendiente
+x_df = data.frame(x)
+
+# Obtenemos el cuartil 40
+P40 = quantile(x_df$x,.40)
+
+print("Percentil 40: ")
+print(P40, quote = F)
+```
+
+```{r}
+# Curtosis
+kurt <- function(x){
+       n <- length(x)
+       k <- (sum((x-mean(x))^4)/n) / 
+         ((sqrt(var(x))^4)) - 3
+       cbind(k)
+       }
+
+x = Saldo_Pendiente
+x_df = data.frame(x)
+
+Cutorsis = kurt(x_df$x)
+Cutorsis
+```
+
+```{r}
+library(e1071)                     
+kurtosis(x_df$x)                
+
+```
+
+```{r}
+hist(x_df$x)
+```
+Utilizamos Estadistica Inferencial
+```{r}
+# A. Conociendo las Variables
+
+```{r}
+print("Saldo Pendiente ")
+print("---------------------------------")
+
+mg <- siniestro %>% 
+  group_by(Saldo_Pendiente) %>% 
+  summarise(n=n()) %>% 
+  mutate(p=100*n/sum(n)) %>% 
+  mutate(cumsum(p))
+
+View(mg)
+```
+
+```{r}
+print("Antiguedad Maxima ")
+print("---------------------------------")
+
+ac <- siniestro %>% 
+  group_by(Antigüedad_Maxima) %>% 
+  summarise(n=n()) %>% 
+  mutate(p=100*n/sum(n)) %>% 
+  mutate(cumsum(p))
+
+View(ac)
+```
+
+
+#B. Limpieza de datos
+
+```{r}
+a <- summary(siniestro)
+print(a)
+```
+
+```{r}
+sum(is.na(siniestro))
+```
+```{r}
+# Observamos gr?ficamente las variables con datos perdidos
+aggr(siniestro,numbers=TRUE, plot = T)
+```
+
+#B. Creacion de nuevas variables cualitativas
+*------------------------------------------------
+Necesitamos variables cualitativas; entonces vamos a recategorizar algunas variables
+
+Variable 1: Saldo Pendiente
+
+Bajo. Saldo Pendiente <= 810
+Medio. 810 < Saldo Pendiente <= 1620
+Alto. 1620 < Saldo Pendiente
+
+Variable 2: Antiguedad Maxima
+
+Bajo. Antiguedad Maxina <= 49
+Alto. 49 < Antiguedad Maxima
+
+Crearemos nuevas variables a partir de otras:
+
+```{r}
+hist(siniestro$Saldo_Pendiente)
+```
+
+1er CUALITATIVO: SALDO PENDIENTE
+```{r}
+summary(siniestro[,"Saldo_Pendiente"])
+
+summary(siniestro$Saldo_Pendiente)
+```
+
+```{r}
+siniestro$Saldo_pendiente_cuali <- cut(siniestro$Saldo_Pendiente, breaks = c(100,810, 1620, 8000), 
+                                     labels = c("bajo", "medio", "alto"))
+
+table(siniestro$Saldo_pendiente_cuali)
+```
+Armando Stanones:
+```{r}
+val_min <- min(siniestro$Saldo_Pendiente)
+val_max <- max(siniestro$Saldo_Pendiente)
+val_mean <- mean(siniestro$Saldo_Pendiente)
+val_var <-var(siniestro$Saldo_Pendiente)
+desv = sqrt(val_var)
+
+desv
+```
+
+```{r}
+siniestro$Saldo_pendiente_3st <- cut(siniestro$Saldo_Pendiente, breaks = c(val_min-1, val_mean-0.7*desv, val_mean+0.7*desv,val_max+1), labels = c("Bajo","Medio","Alto"))
+table(siniestro$Saldo_pendiente_3st)
+```
+
+
+2do CUALITATIVO: ANTIGUEDAD MAXIMA
+
+```{r}
+summary(siniestro$Antigüedad_Maxima)
+
+```
+
+```{r}
+hist(siniestro$Antigüedad_Maxima)
+```
+
+```{r}
+siniestro$Antiguedad_max_Cuali <- cut(siniestro$Antigüedad_Maxima, breaks = c(0, 49, 130), 
+                                      labels = c("bajo","alto"))
+table(siniestro$Antiguedad_max_Cuali)
+```
+
+```{r}
+# Graficamos las 2 variables cualitativas
+
+Tabla1=table(siniestro$Saldo_pendiente_cuali)
+Tabla2=table(siniestro$Antiguedad_max_Cuali)
+
+par(mfrow=c(1,2))
+balloonplot(t(Tabla1), main ="Gráfico N° 1",xlab ="Saldo Pendiente", label = FALSE, show.margins = FALSE)
+balloonplot(t(Tabla2), main ="Gráfico N° 2",xlab ="Antiguedad Maxima", label = FALSE, show.margins = FALSE)
+
+```
+
+#C. Pruebas de Hipotesis
+
+1. Prueba de Normalidad
+
+
+1.a) Primero observamos la distribucion de la variable de interes
+```{r}
+# Histograma: Antiguedad Maxima
+
+p1 = ggplot(siniestro, aes(x = Antigüedad_Maxima)) + 
+  geom_histogram(aes(y = ..density..)) +
+  stat_function(fun = dnorm, colour = "red",
+                args = list(mean = mean(siniestro$Antigüedad_Maxima, na.rm = TRUE),
+                            sd = sd(siniestro$Antigüedad_Maxima, na.rm = TRUE))
+                )
+p1
+```
+```{r}
+# Histograma: Saldo Pendiente
+
+p2 = ggplot(siniestro, aes(x = Saldo_Pendiente)) + 
+  geom_histogram(aes(y = ..density..)) +
+  stat_function(fun = dnorm, colour = "blue",
+                args = list(mean = mean(siniestro$Saldo_Pendiente, na.rm = TRUE),
+                            sd = sd(siniestro$Saldo_Pendiente, na.rm = TRUE))
+                )
+p2
+
+```{r}
+
+VER LA NORMALIDAD DE LOS DATOS.
+
+PLANTEAMIENTO DE LAS HIPÓTESIS
+
+Ho: Los datos estan normalmente distribuidos      
+Ha: Los datos no estan normalmente distribuidos
+
+Nivel de significancia = 5% (0.05)
+
+#-------------------------------------------------
+
+1.b) Aplicamos la prueba de normalidad
+```{r}
+# ANTIGUEDAD MAXIMA
+qqnorm(siniestro$Antigüedad_Maxima)
+qqline(siniestro$Antigüedad_Maxima)
+
+```
+
+```{r}
+
+library(nortest) 
+lillie.test(siniestro$Antigüedad_Maxima)$p.value
+```
+Decisión: Los datos de la variables "Antiguedad Maxima" no están normalmente distribuidos; esto afirmamos con un nivel de confianza del 95%. 
+
+
+```{r}
+# SALDO PENDIENTE
+qqnorm(siniestro$Saldo_Pendiente)
+qqline(siniestro$Saldo_Pendiente)
+
+```
+
+```{r}
+# Transformando la variable
+
+siniestro$Saldo_pendiente_sqrt = sqrt(siniestro$Saldo_Pendiente)
+
+lillie.test(siniestro$Saldo_Pendiente)$p.value
+
+lillie.test(siniestro$Saldo_pendiente_sqrt)$p.value
+
+```
+
+Decision: Los datos de la variable "Raiz cuadra de Saldo Pendiente" esta normalmente distribuida. 
+
+```{r}
+# SALDO PENDIENTE SQRT
+
+qqnorm(siniestro$Saldo_pendiente_sqrt)
+qqline(siniestro$Saldo_pendiente_sqrt)
+
+```
+
+```{r}
+hist(siniestro$Saldo_pendiente_sqrt)
+hist(siniestro$Saldo_Pendiente)
+```
+
+Normalizaremos una variable
+```{r}
+siniestro$Saldo_pendiente_rnorm <- rnorm(siniestro$Saldo_Pendiente)
+
+lillie.test(siniestro$Saldo_pendiente_rnorm)$p.value
+
+```
+
+```{r}
+hist(siniestro$Saldo_pendiente_rnorm)
+```
+
+```{r}
+ggplot(siniestro,aes(x=Saldo_pendiente_rnorm,fill=Antiguedad_max_Cuali))+geom_histogram()
+
+```
+
+```{r}
+ggplot(siniestro,aes(x=Saldo_pendiente_rnorm,fill=Antigüedad_Maxima))+geom_histogram()
+
+```
+
+```{r}
+# Nueva variable numerica a partir de 2 variables numéricas
+str(siniestro)
+
+siniestro$Saldo_log10 = log10(siniestro$Saldo_Pendiente/siniestro$Antigüedad_Maxima)^2
+
+siniestro$Saldo_sqrt = sqrt(siniestro$Saldo_Pendiente/siniestro$Antigüedad_Maxima)
+
+op <- par(mfrow=c(1,2), cex.axis=.7,  cex.lab=.9)
+hist(siniestro$Saldo_log10, main = "Histograma de log10", xlab = "Saldo_log10",col = "yellow")
+hist(siniestro$Saldo_sqrt, main = "Histograma de sqrt", xlab = "Saldo_sqrt",col = "green")
+```
+
+```{r}
+
+
+************************************************************************************
+2 variables numericas.
+
+Ho: No existe correlacion entre las variables A y B.
+Ha: Existe correlacion entre las variables A y B.
+
+2. Prueba de Correlacion: parametrica
+
+```{r}
+ggplot(siniestro,aes(x=Saldo_Pendiente,y=Antigüedad_Maxima,
+                 colour=Saldo_pendiente_rnorm)) + geom_point()
+
+table(siniestro$Saldo_pendiente_rnorm)
+```
+
+
+```{r}
+# Variable N? 1 "Saldo pendiente.
+# Variable N? 2 "Antiguedad maxima".
+
+cor.test(siniestro$Saldo_Pendiente, siniestro$Antigüedad_Maxima, method = 'pearson')
+
+```
+Decisi?n: Existe correlación entre las variables "Saldo pendiente" y "Antiguedad Maxima" 
+Conclusi?n: Con un nivel de confianza del 95%, se afirma que existe una relacion significativa; la relación es directa de 0.1772
+
+**********************************************************************
+2 variables numericas.
+
+Ho: Las variables A y B son mutuamente independientes.
+Ha: Las variables A y B son mutuamente dependientes.
+
+3. Prueba de Correlacion: no paramétrica
+
+```{r}
+ggplot(siniestro,aes(x=Saldo_Pendiente,y=Antigüedad_Maxima)) + geom_point()
+```
+
+```{r}
+# Variable N? 1 "Nivel de ingresos".
+# Variable N? 2 "Antiguedad maxima".
+
+cor.test(siniestro$Nivel_Ingresos, siniestro$Antigüedad_Maxima, method = 'spearman')
+
+```
+
+Decision: Las variable "Nivel de ingresos" y "Antiguedad Maxima" son mutuamente independientes.  
+Conclusión: Con un nivel de confianza del 95%, se afirma que, existe una correlación positiva de 0.3483  = 0.35
+
+**********************************************************************************************
+2 variables son cualitativas (ordinales y/o nominales)
+
+Ho: Las variables A y B son mutuamente independientes.
+Ha: Las variables A y B son mutuamente dependientes.
+
+
+4. Chi-Cuadrado
+```{r}
+tabla_Chi <- table(siniestro$Saldo_pendiente_cuali, siniestro$Antiguedad_max_Cuali)
+
+tabla_Chi
+```
+
+```{r}
+chisq.test(tabla_Chi)
+```
+Decision: Las variables A y B son mutuamente dependientes; con un nivel de confianza del 95%, se afirma que los saldos pendientes y antiguedad maxima estan relacionados.
+
+**********************************************************************************************
+
+Ho: Mu1 = Mu2; No existen diferencias entre las medias.
+Ha: Mu1 <> Mu2; Existen diferencias entre las medias.
+
+5. Prueba de  Dos muestras Independientes: "Prueba de T de Student""
+
+Utilizamos cuando los 2 grupos o muestras, la variable de investigación tienen distribuciones normales.
+
+```{r}
+library(reshape2)
+op <- par(mfrow=c(1,2), cex.axis=.7,  cex.lab=.9)
+boxplot(siniestro$Saldo_Pendiente ~ siniestro$Antiguedad_max_Cuali, col="green")
+barplot(tapply(siniestro$Saldo_Pendiente, list(siniestro$Antiguedad_max_Cuali), mean ), beside=T, main="Saldo pendiente medio")
+
+```
+
+```{r}
+
+t.test(siniestro$Saldo_Pendiente ~ siniestro$Antiguedad_max_Cuali, paried = FALSE) #TRUE: pareadas
+# Nivel de confianza del 95%.
+```
+
+Conclusion: Con un nivel de significancia del 5% se afirma que no existen diferencias entre las medias de saldo pendiente según el tipo de antiguedad (bajo o alto).
+
+
+
+**********************************************************************************************
+Ho: Mu1 = Mu2. = Mux; No hay diferencias entre las medias de los diferentes grupos.
+Ha: Mu1 <> Mu2. <> Mux; Al menos un par de medias son significativamente distintas la una de la otra.
+
+
+6. ANOVA
+```{r}
+op <- par(mfrow=c(1,2), cex.axis=.7,  cex.lab=.9)
+boxplot(siniestro$Antigüedad_Maxima ~ siniestro$Saldo_pendiente_cuali, col="red")
+barplot(tapply(siniestro$Antigüedad_Maxima, list(siniestro$Saldo_pendiente_cuali), mean ), beside=T, main="Antiguedad maxima medio")
+
+```
+```{r}
+#probamos la normalidad de las variables dentro de cada grupo
+
+require(nortest)
+by(data = siniestro,INDICES = siniestro$Saldo_pendiente_cuali,FUN = function(x){ lillie.test(x$Antigüedad_Maxima)})
+
+```
+
+bajo el supuesto de que la variable de análisis en el Grupo "alto" también tiene una distribución normal, se continuará con ANOVA.
+
+```{r}
+# Prueba de homogeneidad de las varianzas
+
+fligner.test(Antigüedad_Maxima ~ Saldo_pendiente_cuali, siniestro)
+
+```
+
+```{r}
+library(car)
+leveneTest(Antigüedad_Maxima ~ Saldo_pendiente_cuali,siniestro,center = "median")
+```
+Si hay evidencias significativas de falta de homocedasticidad en los dos test; la varianza del error condicional de la "Antiguedad Maxima" es constante a lo largo de las observaciones.
+
+```{r}
+# Test de ANOVA. La variable 
+
+anova <- aov(siniestro$Antigüedad_Maxima ~ siniestro$Saldo_pendiente_cuali)
+summary(anova)
+
+```
+
+Decisión: Al menos un par de medias son significativamente distintas la una de la otra
