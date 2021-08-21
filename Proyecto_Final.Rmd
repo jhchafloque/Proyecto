@@ -416,7 +416,7 @@ lillie.test(nutricion$talla_sqrt)$p.value
 
 ```
 
-Decision: Los datos de la variable "Raiz cuadra de Saldo Pendiente" no esta normalmente distribuida. 
+Decision: Los datos de la variable "Raiz cuadrada de talla" no esta normalmente distribuida. 
 
 ```{r}
 # TALLA SQRT
@@ -532,7 +532,7 @@ t.test(nutricion$peso_kg ~ nutricion$peso_kg_Cuali, paried = FALSE) #TRUE: parea
 # Nivel de confianza del 95%.
 ```
 
-Conclusion: Con un nivel de significancia del 5% se afirma que no existen diferencias entre las medias de saldo pendiente según el tipo de antiguedad (menor o mayor).
+Conclusion: Con un nivel de significancia del 5% se afirma que no existen diferencias entre las medias de peso según la talla (menor o mayor).
 
 
 
@@ -718,8 +718,8 @@ fviz_contrib(nutricion_PCA, choice = "var", axes = 4, top = 15)
 
 ```
 
-Observamos la funci?n de los componentes
-Los nombres se asignar?n en base a la composici?n de Componentes - variables
+Observamos la funcion de los componentes
+Los nombres se asignaron en base a la composicion de Componentes - variables
 
 ```{r}
 nutricion_PCA
