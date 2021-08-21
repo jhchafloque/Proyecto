@@ -1,0 +1,944 @@
+---
+title: "Proyecto_Final"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Librerías
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(corrplot)
+library(readxl)
+library(gplots)
+library(ParamHelpers)
+library(mlr)
+library(VIM)
+library(statsr)
+library(modeest)
+
+set.seed(567)
+```
+
+Importamos los datos.
+
+```{r}
+
+getwd() # Verificamos dónde nos encontramos trabajando
+
+setwd("C:/Users/Data/") #Colocamos la direccion que nos interesa
+
+nutricion <- read_excel("C:/Users/Data/Data_Nutricion.xlsx")
+str(nutricion)
+
+dim(nutricion)
+
+head(nutricion)
+View(nutricion)
+
+attach(nutricion) #Agregamos la tabla de datos
+```
+
+Limpieza de datos.
+
+```{r}
+nutricion_2 <- na.omit(nutricion)
+head(nutricion_2)
+
+View(nutricion)
+View(nutricion_2)
+nutricion <- nutricion_2
+
+attach(nutricion)
+```
+
+
+Corregir variables numericas:
+```{r}
+
+nutricion$peso_kg <- as.numeric(nutricion$peso_kg)
+nutricion$cadera <- as.numeric(nutricion$cadera)
+nutricion$pliegue_cutaneo_BICEPS <-  as.numeric(nutricion$pliegue_cutaneo_BICEPS)
+nutricion$pliegue_cutaneo_TRICEPS <-  as.numeric(nutricion$pliegue_cutaneo_TRICEPS)
+nutricion$pliegue_cutaneo_ESCAPULAR <-  as.numeric(nutricion$pliegue_cutaneo_ESCAPULAR)
+nutricion$pliegue_cutaneo_SUPRAILIACO <-  as.numeric(nutricion$pliegue_cutaneo_SUPRAILIACO)
+str(nutricion)
+
+attach(nutricion)
+
+```
+
+Utilizamos Estadistica Descriptiva
+```{r}
+##            MEDIDAS DE TENDENCIA CENTRAL
+################################################
+# Media
+x = peso_kg
+x_df = data.frame(x)
+Media = mean(x_df$x)
+Media
+
+# Mediana
+x = peso_kg
+x_df = data.frame(x)
+Mediana = median(x_df$x)
+Mediana
+
+# Moda
+x = peso_kg
+x_df = data.frame(x)
+Moda = mlv(x_df$x, method = "mfv")[1]
+Moda
+
+# Centro de Amplitud
+x = peso_kg
+x_df = data.frame(x)
+C_a = (min(x_df$x) + max(x_df$x))/2
+C_a
+
+# Media Geometrica
+# Creamos la funci?n
+f_media_geometrica<-function(x) 
+  exp(sum(log(x))/length(x))
+
+x = peso_kg 
+x_df = data.frame(x)
+Med_Geometrica = f_media_geometrica(x_df$x)
+round(Med_Geometrica, 2)
+
+# Media Armonica
+x = peso_kg
+x_df = data.frame(x)
+Media_Armonica = 1/mean(1/x_df$x)
+round(Media_Armonica, 2)
+
+# Media Recortada: al 20%, cada lado 10%
+x = peso_kg
+x_df = data.frame(x)
+Media_Recortada = mean(x_df$x,trim=10/100) # recortando un 20%
+round(Media_Recortada, 2)
+
+# Trimedia
+x = peso_kg 
+x_df = data.frame(x)
+
+# Obtenemos los cuartiles
+Q1 = quantile(x_df$x,.25)
+Q2 = quantile(x_df$x,.50)
+Q3 = quantile(x_df$x,.75)
+
+Trimedia = (Q1 + 2*Q2 + Q3)/4
+round(Trimedia, 2)
+
+##            MEDIDAS DE DISPERSION
+################################################
+# Rango
+x = peso_kg
+x_df = data.frame(x)
+Rango =max(x_df$x) - min(x_df$x)
+Rango
+
+# Cuartiles
+x = peso_kg 
+x_df = data.frame(x)
+
+# Obtenemos los cuartiles
+Q1 = quantile(x_df$x,.25)
+Q2 = quantile(x_df$x,.50)
+Q3 = quantile(x_df$x,.75)
+
+print(min(x_df$x))
+print(c("Cuartil Q1: ",Q1),quote = F)
+print(c("Cuartil Q2: ",Q2),quote = F)
+print(c("Cuartil Q3: ",Q3),quote = F)
+print(max(x_df$x))
+
+
+# Rango intercuartil
+x = peso_kg 
+x_df = data.frame(x)
+
+# Obtenemos los cuartiles
+Q1 = quantile(x_df$x,.25)
+Q3 = quantile(x_df$x,.75)
+
+Rango_Intercuartil = Q3 - Q1
+
+print("El Rango Intercuartil es: ")
+print(Rango_Intercuartil, quote = F)
+
+# Varianza
+x = peso_kg
+x_df = data.frame(x)
+varianza = var(x_df$x)   #1ra opcion
+varianza = sd(x_df$x)^2  #2da opcion
+varianza
+
+# Desviacion estandar
+x = peso_kg
+x_df = data.frame(x)
+Desv_Estandar = sd(x_df$x)
+Desv_Estandar
+
+# Coeficiente de variaci?n
+x = peso_kg
+x_df = data.frame(x)
+Media = mean(x_df$x)
+Desv_Estandar = sd(x_df$x)
+Coef_Variacion = Desv_Estandar/ Media * 100
+round(Coef_Variacion, 2)
+
+# Cuantiles
+x = peso_kg
+x_df = data.frame(x)
+
+# Obtenemos el cuartil 40
+P40 = quantile(x_df$x,.40)
+
+print("Percentil 40: ")
+print(P40, quote = F)
+
+# Curtosis
+kurt <- function(x){
+       n <- length(x)
+       k <- (sum((x-mean(x))^4)/n) / 
+         ((sqrt(var(x))^4)) - 3
+       cbind(k)
+       }
+
+x = peso_kg
+x_df = data.frame(x)
+
+Cutorsis = kurt(x_df$x)
+Cutorsis
+
+library(e1071)                     
+kurtosis(x_df$x)                
+
+
+hist(x_df$x)
+
+```
+
+2. Utilizamos Estadistica Inferencial
+```{r}
+# A. Conociendo las Variables
+
+print("Peso en kilogramos ")
+print("---------------------------------")
+
+mg <- nutricion %>% 
+  group_by(peso_kg) %>% 
+  summarise(n=n()) %>% 
+  mutate(p=100*n/sum(n)) %>% 
+  mutate(cumsum(p))
+
+View(mg)
+
+
+print("Talla ")
+print("---------------------------------")
+
+ac <- nutricion %>% 
+  group_by(talla) %>% 
+  summarise(n=n()) %>% 
+  mutate(p=100*n/sum(n)) %>% 
+  mutate(cumsum(p))
+
+View(ac)
+```
+
+B. Creacion de nuevas variables cualitativas
+
+Necesitamos variables cualitativas; entonces vamos a recategorizar algunas variables
+
+Variable 1: Peso en kilogramos
+
+Menor. Peso <= 57
+Mayor. 57 < Peso
+
+Variable 2: Talla
+
+Baja. Talla <= 159
+Alta. 159 < Talla
+
+
+Crearemos nuevas variables a partir de otras:
+
+```{r}
+hist(nutricion$peso_kg)
+```
+
+1er CUALITATIVO: PESO EN KILOGRAMOS
+```{r}
+summary(nutricion[,"peso_kg"])
+
+summary(nutricion$peso_kg)
+
+nutricion$peso_kg_Cuali <- cut(nutricion$peso_kg, breaks = c(0, 57, 91), 
+                                      labels = c("Menor","Mayor"))
+table(nutricion$peso_kg_Cuali)
+```
+
+Armando Stanones:
+
+```{r}
+val_min <- min(nutricion$peso_kg)
+val_max <- max(nutricion$peso_kg)
+val_mean <- mean(nutricion$peso_kg)
+val_var <-var(nutricion$peso_kg)
+desv = sqrt(val_var)
+
+desv
+
+```
+
+2do CUALITATIVO: TALLA
+
+```{r}
+summary(nutricion$talla)
+
+hist(nutricion$talla)
+
+nutricion$talla_Cuali <- cut(nutricion$talla, breaks = c(0, 159, 189), 
+                                      labels = c("Baja","Alta"))
+table(nutricion$talla_Cuali)
+```
+
+```{r}
+# Graficamos las 2 variables cualitativas
+
+Tabla1=table(nutricion$peso_kg_Cuali)
+Tabla2=table(nutricion$talla_Cuali)
+
+par(mfrow=c(1,2))
+balloonplot(t(Tabla1), main ="Gráfico N° 1",xlab ="Peso", label = FALSE, show.margins = FALSE)
+balloonplot(t(Tabla2), main ="Gráfico N° 2",xlab ="Talla", label = FALSE, show.margins = FALSE)
+
+```
+
+Pruebas de Hipotesis
+
+Prueba de Normalidad
+
+
+a) Primero observamos la distribucion de la variable de interes
+```{r}
+# Histograma: Peso en kilogramos
+
+p1 = ggplot(nutricion, aes(x = peso_kg)) + 
+  geom_histogram(aes(y = ..density..)) +
+  stat_function(fun = dnorm, colour = "red",
+                args = list(mean = mean(nutricion$peso_kg, na.rm = TRUE),
+                            sd = sd(nutricion$peso_kg, na.rm = TRUE))
+                )
+p1
+
+# Histograma: Talla
+
+p2 = ggplot(nutricion, aes(x = talla)) + 
+  geom_histogram(aes(y = ..density..)) +
+  stat_function(fun = dnorm, colour = "blue",
+                args = list(mean = mean(nutricion$talla, na.rm = TRUE),
+                            sd = sd(nutricion$talla, na.rm = TRUE))
+                )
+p2
+
+```
+
+VER LA NORMALIDAD DE LOS DATOS.
+
+PLANTEAMIENTO DE LAS HIPÓTESIS
+
+Ho: Los datos estan normalmente distribuidos      
+Ha: Los datos no estan normalmente distribuidos
+
+Nivel de significancia = 5% (0.05)
+
+-------------------------------------------------
+
+a) Aplicamos la prueba de normalidad
+```{r}
+# PESO EN KILOGRAMOS
+qqnorm(nutricion$peso_kg)
+
+```
+
+```{r}
+
+library(nortest) 
+lillie.test(nutricion$peso_kg)$p.value
+
+```
+Decisión: Los datos de la variables "Peso en Kilogramos" no están normalmente distribuidos; esto afirmamos con un nivel de confianza del 95%. 
+
+
+```{r}
+# TALLA
+qqnorm(nutricion$talla)
+
+```
+
+```{r}
+# Transformando la variable
+
+nutricion$talla_sqrt = sqrt(nutricion$talla)
+
+lillie.test(nutricion$talla)$p.value
+
+lillie.test(nutricion$talla_sqrt)$p.value
+
+```
+
+Decision: Los datos de la variable "Raiz cuadra de Saldo Pendiente" no esta normalmente distribuida. 
+
+```{r}
+# TALLA SQRT
+
+qqnorm(nutricion$talla_sqrt)
+
+```
+
+```{r}
+hist(nutricion$talla_sqrt)
+hist(nutricion$talla)
+```
+
+Normalizaremos una variable
+```{r}
+nutricion$talla_rnorm <- rnorm(nutricion$talla)
+
+lillie.test(nutricion$talla_rnorm)$p.value
+
+```
+
+```{r}
+hist(nutricion$talla_rnorm)
+```
+
+```{r}
+ggplot(nutricion,aes(x=talla_rnorm,fill=peso_kg_Cuali))+geom_histogram()
+
+```
+
+```{r}
+ggplot(nutricion,aes(x=talla_rnorm,fill=peso_kg))+geom_histogram()
+
+```
+
+```{r}
+# Nueva variable numerica a partir de 2 variables numéricas
+str(nutricion)
+
+nutricion$peso_log10 = log10(nutricion$peso_kg/nutricion$talla)^2
+
+nutricion$peso_sqrt = sqrt(nutricion$peso_kg/nutricion$talla)
+
+op <- par(mfrow=c(1,2), cex.axis=.7,  cex.lab=.9)
+hist(nutricion$peso_log10, main = "Histograma de log10", xlab = "Peso_log10",col = "yellow")
+hist(nutricion$peso_sqrt, main = "Histograma de sqrt", xlab = "Peso_sqrt",col = "green")
+```
+
+
+#2 variables numericas.
+
+#Ho: No existe correlacion entre las variables A y B.
+#Ha: Existe correlacion entre las variables A y B.
+
+```{r}
+#2. Prueba de Correlacion: parametrica
+
+ggplot(nutricion,aes(x=peso_kg,y=talla,
+                 colour=talla_rnorm)) + geom_point()
+
+table(nutricion$talla_rnorm)
+```
+
+
+```{r}
+# Variable N? 1 "Saldo pendiente.
+# Variable N? 2 "Antiguedad maxima".
+
+cor.test(nutricion$peso_kg, nutricion$talla, method = 'pearson')
+
+```
+Decision: Existe correlación entre las variables "Peso" y "Talla" 
+Conclusion: Con un nivel de confianza del 95%, se afirma que existe una relacion significativa; la relación es directa de 0.4693
+
+
+Ho: Las variables A y B son mutuamente independientes.
+Ha: Las variables A y B son mutuamente dependientes.
+
+
+Chi-Cuadrado
+```{r}
+tabla_Chi <- table(nutricion$peso_kg_Cuali, nutricion$talla_Cuali)
+
+tabla_Chi
+```
+
+```{r}
+chisq.test(tabla_Chi)
+```
+Decision: Las variables A y B son mutuamente dependientes; con un nivel de confianza del 95%, se afirma que los pesos y tallas estan relacionados.
+
+**********************************************************************************************
+
+Ho: Mu1 = Mu2; No existen diferencias entre las medias.
+Ha: Mu1 <> Mu2; Existen diferencias entre las medias.
+
+
+Prueba de  Dos muestras Independientes: "Prueba de T de Student""
+
+Utilizamos cuando los 2 grupos o muestras, la variable de investigación tienen distribuciones normales.
+
+```{r}
+library(reshape2)
+op <- par(mfrow=c(1,2), cex.axis=.7,  cex.lab=.9)
+boxplot(nutricion$peso_kg ~ nutricion$talla, col="green")
+barplot(tapply(nutricion$peso_kg, list(nutricion$peso_kg_Cuali), mean ), beside=T, main="Peso medio")
+
+```
+
+```{r}
+
+t.test(nutricion$peso_kg ~ nutricion$peso_kg_Cuali, paried = FALSE) #TRUE: pareadas
+# Nivel de confianza del 95%.
+```
+
+Conclusion: Con un nivel de significancia del 5% se afirma que no existen diferencias entre las medias de saldo pendiente según el tipo de antiguedad (menor o mayor).
+
+
+
+**********************************************************************************************
+Ho: Mu1 = Mu2. = Mux; No hay diferencias entre las medias de los diferentes grupos.
+Ha: Mu1 <> Mu2. <> Mux; Al menos un par de medias son significativamente distintas la una de la otra.
+
+
+ANOVA
+```{r}
+op <- par(mfrow=c(1,2), cex.axis=.7,  cex.lab=.9)
+boxplot(nutricion$peso_kg ~ nutricion$peso_kg_Cuali, col="red")
+barplot(tapply(nutricion$peso_kg, list(nutricion$peso_kg_Cuali), mean ), beside=T, main="Pesoa medio")
+
+```
+```{r}
+#probamos la normalidad de las variables dentro de cada grupo
+
+require(nortest)
+by(data = nutricion,INDICES = nutricion$peso_kg_Cuali,FUN = function(x){ lillie.test(x$talla)})
+
+```
+
+Al menos un par de medias son significativamente distintas la una de la otra
+
+```{r}
+# Prueba de homogeneidad de las varianzas
+
+fligner.test(peso_kg ~ talla_Cuali, nutricion)
+
+```
+
+```{r}
+library(car)
+leveneTest(peso_kg ~ talla_Cuali,nutricion,center = "median")
+```
+Si hay evidencias significativas de falta de homocedasticidad en los dos test; la varianza del error condicional de el "Peso en kilogramos" es constante a lo largo de las observaciones.
+
+```{r}
+# Test de ANOVA. La variable 
+
+anova <- aov(nutricion$peso_kg ~ nutricion$talla_Cuali)
+summary(anova)
+
+```
+
+Decisión: Al menos un par de medias son significativamente distintas la una de la otra
+
+***********************************************************************
+
+## 1. Librerias a utilizar
+```{r}
+library(car)
+library(ggplot2)
+library(ggcorrplot)
+library(dplyr)
+library(readxl)
+library(dplyr)
+library(FactoMineR)
+library(corrplot)
+library(GGally)
+library(Hmisc)
+library(factoextra)
+library(PerformanceAnalytics)
+
+set.seed(567)
+```
+## 2. Data
+Importamos y veficamos la data:
+
+```{r}
+
+data_nutricion <- read_excel("C:/Users/Data/Nuevo.xlsx")
+str(data_nutricion)
+
+```
+
+Seleccionamos solo la data que vamos a utilizar en el PCA:
+
+```{r}
+dnutricion <- data_nutricion
+dnutricion <- dnutricion[,-1]  
+str(dnutricion)
+
+dnutricion <- dnutricion %>%
+  mutate_all(as.numeric)
+
+View(head(dnutricion, 6))
+
+View(head(dnutricion)) # data original
+```
+
+## A. ANALISIS DE COMPONENTES PRINCIPALES
+##.............................................
+
+Observando la media de las variables:
+
+```{r}
+apply(X = dnutricion, MARGIN = 2, FUN = mean)
+
+```
+
+Observando la varianza de las variables:
+
+```{r}
+
+apply(X = dnutricion, MARGIN = 2, FUN = var)
+
+```
+
+## 3. Analisis de correlacion
+
+
+```{r}
+
+chart.Correlation(dnutricion, histogram = F, pch = 19)
+
+```
+
+## 4. Estandariza automatica - PCA
+```{r}
+
+nutricion_PCA <- PCA(X = dnutricion, scale.unit = TRUE, ncp = 64, graph = FALSE)
+
+nutricion_PCA$eig
+
+```
+
+Los primeros 4 componentes explican el 86.3% de la varianza:
+
+```{r}
+library(factoextra)
+fviz_screeplot(nutricion_PCA, addlabels = TRUE, ylim = c(0, 50))
+
+```
+Graficamos las observaciones sobre las dos primeras componentes principales.
+Dimensiones 1 y 2:
+
+```{r}
+
+fviz_pca_ind(nutricion_PCA, geom.ind = "point", 
+             col.ind = "#FC4E07", 
+             axes = c(1, 2), 
+             pointsize = 1.5) 
+
+```
+
+Dimensiones 1 y 3:
+
+```{r}
+
+fviz_pca_ind(nutricion_PCA, geom.ind = "point", 
+             col.ind = "#FC4E07", 
+             axes = c(1, 3), 
+             pointsize = 1.5) 
+
+```
+
+Vamos a identificar las variables con mayor contribución a nuestros componentes seleccionados
+
+Dim1:
+```{r}
+fviz_contrib(nutricion_PCA, choice = "var", axes = 1, top = 15)
+
+```
+La linea roja nos indica la contribucion media; toda contribucion mayor a este puede considerarse importante para el componente.
+
+Dim2:
+```{r}
+fviz_contrib(nutricion_PCA, choice = "var", axes = 2, top = 15)
+
+```
+
+Dim3:
+```{r}
+fviz_contrib(nutricion_PCA, choice = "var", axes = 3, top = 15)
+
+```
+
+Dim4:
+```{r}
+fviz_contrib(nutricion_PCA, choice = "var", axes = 4, top = 15)
+
+```
+
+Observamos la funci?n de los componentes
+Los nombres se asignar?n en base a la composici?n de Componentes - variables
+
+```{r}
+nutricion_PCA
+
+```
+
+En base a la composicion de cada Componente se le asignara el nombre.
+```{r}
+nutricion_PCA$var$contrib
+
+```
+
+Guardamos los nuevos componentes. Solo los top 4 seleccionados.
+```{r}
+
+componentes <- nutricion_PCA$ind$coord [, 1:3]
+
+dim(componentes)
+
+save(componentes, file = "pacientes.Rdata")
+View(componentes)
+
+```
+
+## B. ANALISIS CLUSTER
+
+```{r}
+library(tidyverse)
+library(cluster)
+library(factoextra)
+library(NbClust)
+library(tidyr)
+library(ggplot2)
+library(car)
+library(ggcorrplot)
+library(dplyr)
+library(readxl)
+library(dplyr)
+library(FactoMineR)
+library(corrplot)
+library(GGally)
+library(Hmisc)
+library(PerformanceAnalytics)
+
+set.seed(567)
+```
+
+## 1. Observamos la data
+
+
+```{r}
+
+data_nutricion <- read_excel("C:/Users/Data/Nuevo.xlsx")
+str(data_nutricion)
+
+```
+
+```{r}
+
+dnutricion <- data_nutricion
+dnutricion <- dnutricion[,-1]
+
+dnutricion <- dnutricion %>%
+  mutate_all(as.numeric)
+
+head(dnutricion, 6)
+View(dnutricion)
+head(data_nutricion) # data original
+```
+
+```{r}
+head(dnutricion) #data seleccionada para el análisis clUster
+```
+
+##2. Viendo que las variables estan en diferentes escalas, vamos a normalizar las puntuaciones:
+
+```{r}
+
+dnutricion <- scale(dnutricion)
+View(dnutricion)
+
+```
+
+## 3. Calcular las distancias
+
+Tambien se puede trabajar con los metodos: "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman" o "kendall"
+
+```{r}
+
+Distancias <- get_dist(dnutricion, method = "euclidean")
+
+fviz_dist(Distancias, gradient = list(low = "blue", mid = "white", high = "red"))
+
+# Como son bastantes casos, el gr?fico no se aprecia mucho; con pocos caso se ve mejor
+```
+
+## 4. Nro de clusters.
+
+Vamos a estimar el numero de clusters idoneo: Elbow
+```{r}
+
+fviz_nbclust(dnutricion, kmeans, method = "wss")
+
+```
+
+Vamos a estimar el numero de clusters idoneo: silhouette
+```{r}
+fviz_nbclust(dnutricion, kmeans, method = "silhouette")
+
+```
+
+Vamos a estimar el numero de clusters idoneo: gap_stat
+```{r}
+
+fviz_nbclust(dnutricion, kmeans, method = "gap_stat")
+
+```
+
+
+## 5. Realizaremos una clasificacion Jerarquica para visualizar posible nro de clusters
+
+```{r}
+
+CJerarquico <- hcut(dnutricion, k = 5, stand = TRUE) #k = 2 a m?s
+fviz_dend(CJerarquico, rect = TRUE, cex = 0.5,
+          k_colors = c("red","#2E9FDF","green","black", "blue"))
+
+```
+
+## 6. Calculamos los k=5 clústers; podemos probar igual con 3 y 4 clusters.
+
+```{r}
+
+kmeans5 <- kmeans(dnutricion, centers = 5, nstart = 25)
+kmeans5
+head(dnutricion)
+
+```
+
+estructura k-means
+```{r}
+
+str(kmeans5)
+
+```
+
+Centroides de los clusters:
+
+```{r}
+kmeans5$centers
+```
+
+Tamaño de los clusters:
+```{r}
+
+kmeans5$size
+
+```
+
+
+
+## Graficar los clusters
+
+Grafico de los cluster's
+```{r}
+
+fviz_cluster(list(data = dnutricion, cluster = kmeans5$cluster))
+
+
+```
+
+2do tipo de grafico
+```{r}
+
+fviz_cluster(list(data = dnutricion, cluster = kmeans5$cluster), ellipse.type = "euclid",repel = TRUE,star.plot = TRUE)
+
+```
+
+3er tipo de grafico
+```{r}
+fviz_cluster(list(data = dnutricion, cluster = kmeans5$cluster),ellipse.type = "norm")
+
+
+```
+
+```{r}
+
+fviz_cluster(list(data = dnutricion, cluster = kmeans5$cluster), ellipse.type = "norm",palette = "Set2", ggtheme = theme_minimal())
+
+
+```
+
+Guardamos el cluster en la base de datos originales:
+
+```{r}
+cluster <- data.frame(kmeans5$cluster)
+
+data_nutricion_c <- data_nutricion
+data_nutricion_c$cluster <- as.factor(cluster$kmeans5.cluster)
+  
+head(data_nutricion_c)
+View(data_nutricion_c)
+```
+
+#Observaremos las caracteristicas de los clusters
+
+```{r}
+
+dnutricion <- data_nutricion_c
+dnutricion <- dnutricion[,-1] 
+View(dnutricion)
+
+dnutricion <- dnutricion %>%
+  mutate_all(as.numeric)
+
+aa<- dnutricion %>%
+  mutate(cluster = dnutricion$cluster) %>%
+  group_by(cluster) %>%
+  summarise_all("mean")
+
+View(aa)
+```
